@@ -16,7 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     
-    <!-- Babel для компиляции TSX -->
+    <!-- Babel для компиляции JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
@@ -76,32 +76,13 @@
 
     <!-- 
        ВЕСЬ КОД ПРИЛОЖЕНИЯ В ОДНОМ СКРИПТЕ 
-       type="text/babel" позволяет писать JSX/TSX
+       type="text/babel" позволяет писать JSX
        data-type="module" позволяет использовать import из importmap
     -->
     <script type="text/babel" data-type="module">
         import React, { useState, useRef, useEffect } from 'react';
         import ReactDOM from 'react-dom/client';
         import { GoogleGenAI, Type, Modality } from "@google/genai";
-
-        // --- TYPES ---
-        // Интерфейсы для TypeScript (Babel их игнорирует при выполнении)
-        interface Recipe {
-          name: string;
-          prep_time: number;
-          difficulty: string;
-          ingredients: string[];
-          steps: string[];
-          imageUrl?: string;
-        }
-
-        interface CulinaryResponse {
-          detected_ingredients: string[];
-          recipes: Recipe[];
-          tip: string;
-        }
-
-        type Tab = 'scan' | 'recipes' | 'settings';
 
         // --- GEMINI SERVICE ---
         
@@ -115,9 +96,9 @@
         // Получаем экземпляр AI каждый раз заново, чтобы подхватить обновленный ключ
         const getAi = () => new GoogleGenAI({ apiKey: window.process.env.API_KEY });
 
-        const analyzeFridge = async (input: string, imageData?: string): Promise<CulinaryResponse | null> => {
+        const analyzeFridge = async (input, imageData) => {
           const ai = getAi();
-          const contents: any[] = [{ text: input || "Что можно приготовить из этих продуктов?" }];
+          const contents = [{ text: input || "Что можно приготовить из этих продуктов?" }];
           
           if (imageData) {
             contents.push({
@@ -160,7 +141,7 @@
           });
 
           try {
-            const data = JSON.parse(response.text || '{}') as CulinaryResponse;
+            const data = JSON.parse(response.text || '{}');
             // Генерируем изображения параллельно
             await Promise.all(data.recipes.map(async (recipe) => {
                  recipe.imageUrl = await generateDishImage(recipe.name);
@@ -172,7 +153,7 @@
           }
         };
 
-        const generateDishImage = async (dishName: string): Promise<string | undefined> => {
+        const generateDishImage = async (dishName) => {
             const ai = getAi();
             try {
                 const response = await ai.models.generateContent({
@@ -188,7 +169,7 @@
             }
         };
 
-        const generateSpeech = async (text: string) => {
+        const generateSpeech = async (text) => {
           const ai = getAi();
           const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
@@ -203,7 +184,7 @@
           return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
         };
 
-        const decodeAudio = (base64: string): Uint8Array => {
+        const decodeAudio = (base64) => {
           const binaryString = atob(base64);
           const bytes = new Uint8Array(binaryString.length);
           for (let i = 0; i < binaryString.length; i++) {
@@ -212,7 +193,7 @@
           return bytes;
         };
 
-        const decodeAudioData = async (data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> => {
+        const decodeAudioData = async (data, ctx, sampleRate, numChannels) => {
           const dataInt16 = new Int16Array(data.buffer);
           const frameCount = dataInt16.length / numChannels;
           const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
@@ -477,7 +458,7 @@
                      <div className="bg-white p-10 rounded-[4rem] shadow-xl shadow-gray-200/50 text-center border border-gray-50">
                         <div className="w-24 h-24 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner animate-pulse">🥗</div>
                         <h2 className="text-3xl font-black tracking-tight">Шеф активен</h2>
-                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mt-2">v 1.2.0 (Portable Edition)</p>
+                        <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mt-2">v 1.2.1 (Pure JS)</p>
                      </div>
 
                      <div className="bg-white rounded-[3rem] overflow-hidden shadow-xl shadow-gray-200/50 border border-gray-50">
